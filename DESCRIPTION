@@ -1,0 +1,16 @@
+Package: shinyModules
+Type: Package
+Title: UI/Server Modules For My Common Tasks
+Version: 0.0.0.9000
+Authors@R: person("Richard", "White", email = "richard.white@sanger.ac.uk", role = c("aut", "cre"))
+Description: This is a set of Shiny Modules to encapsulate
+    things I commonly use to allow reuse in multiple Shiny Apps
+Imports:
+	shiny,
+	rnaseqVis
+Depends: R (>= 3.6.1)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat
