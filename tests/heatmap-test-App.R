@@ -1,5 +1,5 @@
-library('shiny')
 # Test App for heatmap modules
+library('shiny')
 
 ui <- fluidPage(
   sidebarLayout(
