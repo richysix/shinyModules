@@ -1,6 +1,10 @@
 # test App for select variables modules
-library('shiny')
-library('ggplot2')
+library("shiny")
+library("ggplot2")
+library("rprojroot")
+
+root_path <- find_root(is_rstudio_project)
+source(file.path(root_path, 'R', 'select_variables.R'))
 
 ui <- fluidPage(
   sidebarLayout(
@@ -27,13 +31,6 @@ server <- function(input, output) {
     yvar <- yvar$selected()
     print(xvar)
 
-    #   xvar <- xvar$selected()
-    #   yvar <- yvar$selected()
-    #   print(xvar)
-    #   print(yvar)
-    #   ggplot(data = mpg) +
-    #     geom_point(aes(x = !!xvar, y = !!yvar))
-    # })
     x <- rlang::sym(xvar)
     print(x)
     y <- rlang::sym(yvar)

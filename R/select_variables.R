@@ -5,18 +5,18 @@ library(shiny)
 #' \code{select_vars_pulldown_ui} Produces a UI component for selecting variables
 #' from a list. The default option is always the first item in the list
 #'
-#' @param id                      id for the UI element. Must be matched when calling
+#' @param id         id for the UI element. Must be matched when calling
 #' the server function from callModule. [character]
-#' @param label                   label for the UI control. [character]
-#' @param choice_names      vector of names for the Transform radio buttons
-#' @param choices           vector of choices for the Transform radio buttons
+#' @param label      label for the UI control. [character]
+#' @param choices    vector of choices for the pulldown list
 #'
-#' @return a tagList of UI elements
+#' @return a selectInput UI element
 #'
 #' @examples
 #' ui <- fluidPage(
 #'   fluidRow(
-#'       wellPanel(select_vars_pulldown_ui("expr_heatmap_controls", label = "Expression Heatmap"))
+#'       wellPanel(select_vars_pulldown_ui("xvar", label = "X Variable",
+#'           choices = c('class', 'cyl', 'cty'))
 #'   )
 #' )
 #'
@@ -34,20 +34,19 @@ select_vars_pulldown_ui <- function(id, label = "X variable",
 
 #' A server function to get the value selected
 #'
-#' \code{select_vars_server} returns a list of selections
-#' made in the heatmap control UI module. This function should
+#' \code{select_vars_pulldown_server} returns a list of selections
+#' made in the select_vars UI module. This function should
 #' be used with callModule.
 #'
 #' @param input,output,session standard \code{shiny} boilerplate
 #'
 #' @return list with following components
 #' \describe{
-#'   \item{transform_choice}{reactive character indicating transform selection}
-#'   \item{cluster_choices}{reactive list indicating cluster checkbox group selections}
+#'   \item{selected}{reactive character indicating choice selected}
 #' }
 #'
 #' server <- function(input, output, session) {
-#'   heatmap_selections <- callModule(select_vars_server, "expr_heatmap_controls")
+#'   xvar <- callModule(select_vars_pulldown_server, "xvar")
 #' }
 #'
 #' @export
