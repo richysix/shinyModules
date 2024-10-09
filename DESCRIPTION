@@ -1,7 +1,7 @@
 Package: shinyModules
 Type: Package
 Title: UI/Server Modules For My Common Tasks
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: person("Richard", "White", email = "richard.white@sanger.ac.uk", role = c("aut", "cre"))
 Description: This is a set of Shiny Modules to encapsulate
     things I commonly use to allow reuse in multiple Shiny Apps
