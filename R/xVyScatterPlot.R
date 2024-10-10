@@ -19,11 +19,11 @@
 #'
 xVyScatterplotInput <-
   function(id, x_label = "X variable", y_label = "Y variable") {
-  tagList(
-    selectizeInput(NS(id, "xVar"), x_label, choices = NULL),
-    selectizeInput(NS(id, "yVar"), y_label, choices = NULL),
-    checkboxInput(NS(id, "lm"), 'Add regression line', value = FALSE, width = NULL)
-  )
+    tagList(
+      selectizeInput(NS(id, "xVar"), x_label, choices = NULL),
+      selectizeInput(NS(id, "yVar"), y_label, choices = NULL),
+      checkboxInput(NS(id, "lm"), 'Add regression line', value = FALSE, width = NULL)
+    )
 }
 
 #' Create Output to display the Scatterplot
@@ -57,9 +57,8 @@ xVyScatterplotOutput <- function(id) {
 #' @param data data.frame for plotting. Expected in long format with a column
 #' named `variable` and one named `value`
 #'
-#' @returns a list containing two [shiny::reactive()] objects
-#' * sampleInfo a data.frame of sample metadata
-#' * counts a data.frame of RNAseq count data
+#' @returns a list invisibly containing one [shiny::reactive()] object
+#' * plot_data a data.frame of plotted data
 #'
 #' @export
 #'
@@ -88,14 +87,19 @@ xVyScatterplotServer <- function(id, data = NULL, debug = FALSE) {
     }) |>
       bindEvent(data())
 
-    plot <- reactive({
+    plot_data <- reactive({
       data <- req(data())
       x_var <- req(input$xVar)
       y_var <- req(input$yVar)
-      plot_data <- data |>
+      data |>
         dplyr::filter(variable %in% c(x_var, y_var)) |>
         tidyr::pivot_wider(names_from = variable, values_from = value)
+    })
 
+    plot <- reactive({
+      plot_data <- req(plot_data())
+      x_var <- req(input$xVar)
+      y_var <- req(input$yVar)
       p <- ggplot(data = plot_data,
                   aes(x = !!rlang::sym(x_var), y = !!rlang::sym(y_var))) +
         geom_point() +
@@ -108,6 +112,8 @@ xVyScatterplotServer <- function(id, data = NULL, debug = FALSE) {
     })
 
     output$xy_scatter <- renderPlot(plot())
+
+    return(list(plot_data = plot_data))
   })
 }
 
