@@ -2,7 +2,9 @@ Package: shinyModules
 Type: Package
 Title: UI/Server Modules For My Common Tasks
 Version: 0.0.0.9001
-Authors@R: person("Richard", "White", email = "richard.white@sanger.ac.uk", role = c("aut", "cre"))
+Authors@R: 
+    person("Richard", "White", , "rich@buschlab.org", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1842-412X"))
 Description: This is a set of Shiny Modules to encapsulate
     things I commonly use to allow reuse in multiple Shiny Apps
 Imports:
