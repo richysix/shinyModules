@@ -100,13 +100,14 @@ xVyScatterplotServer <- function(id, data = NULL, debug = FALSE) {
       plot_data <- req(plot_data())
       x_var <- req(input$xVar)
       y_var <- req(input$yVar)
-      p <- ggplot(data = plot_data,
-                  aes(x = !!rlang::sym(x_var), y = !!rlang::sym(y_var))) +
-        geom_point() +
-        theme_minimal()
+      p <- ggplot2::ggplot(
+        data = plot_data,
+        aes(x = !!rlang::sym(x_var), y = !!rlang::sym(y_var))
+      ) + ggplot2::geom_point() +
+        ggplot2::theme_minimal()
       if (input$lm) {
         p <- p +
-          geom_smooth(method = "lm", formula = y ~ x, fill = "orange")
+          ggplot2::geom_smooth(method = "lm", formula = y ~ x, fill = "orange")
       }
       return(p)
     })
