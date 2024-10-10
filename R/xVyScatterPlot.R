@@ -102,7 +102,7 @@ xVyScatterplotServer <- function(id, data = NULL, debug = FALSE) {
       y_var <- req(input$yVar)
       p <- ggplot2::ggplot(
         data = plot_data,
-        aes(x = !!rlang::sym(x_var), y = !!rlang::sym(y_var))
+        ggplot2::aes(x = !!rlang::sym(x_var), y = !!rlang::sym(y_var))
       ) + ggplot2::geom_point() +
         ggplot2::theme_minimal()
       if (input$lm) {
