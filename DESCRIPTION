@@ -8,9 +8,8 @@ Authors@R:
 Description: This is a set of Shiny Modules to encapsulate
     things I commonly use to allow reuse in multiple Shiny Apps
 Imports:
-	shiny,
 	rnaseqVis
-Depends: R (>= 3.6.1)
+Depends: R (>= 3.6.1), shiny, shinyBS
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
