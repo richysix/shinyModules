@@ -89,7 +89,7 @@ countPlotOutput <- function(id) {
 #' gene_metadata = reactive(rnaseqVis::gene_metadata[1:10,]))
 #'
 countPlotServer <- function(id, counts = NULL, sample_info = NULL,
-                          gene_metadata = NULL, debug = NULL) {
+                          gene_metadata = NULL, debug = FALSE) {
   stopifnot(is.reactive(counts))
   stopifnot(is.reactive(sample_info))
   stopifnot(is.reactive(gene_metadata))
@@ -309,7 +309,7 @@ create_fill_palette <- function(fill_vec) {
   # check number of levels
   num_colours <- nlevels(fill_vec)
   if (num_colours <= 10) {
-    return(biovisr::cbf_palette(fill_vec, named=TRUE))
+    return(biovisr::cbf_palette(fill_vec, named = TRUE))
   } else {
     ord1 <- seq(1,num_colours,2)
     ord2 <- seq(2,num_colours,2)
