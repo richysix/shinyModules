@@ -98,6 +98,7 @@ countPlotServer <- function(id, counts = NULL, sample_info = NULL,
 
     # update select input with genes in current set
     observe({
+      req(gene_metadata())
       gene_ids <- gene_metadata()$GeneID
       updateSelectInput(session, inputId = "count_plot_gene_select",
                         choices = gene_ids)
@@ -105,6 +106,7 @@ countPlotServer <- function(id, counts = NULL, sample_info = NULL,
 
     # update fill variable with categorical column
     observe({
+      req(sample_info())
       cat_columns <-
         sapply(colnames(sample_info()),
                function(x){
@@ -364,6 +366,7 @@ countPlotApp <- function(debug = TRUE) {
     sidebarLayout(
       sidebarPanel(
         countPlotInput('rnaseq'),
+        checkboxInput("load_data", "Load RNA-seq data"),
         width = 4
       ),
       mainPanel(
@@ -376,10 +379,21 @@ countPlotApp <- function(debug = TRUE) {
   )
 
   server <- function(input, output, session) {
-    countPlotServer("rnaseq", counts = reactive(rnaseqVis::counts[1:10, 1:20]),
-                    sample_info = reactive(rnaseqVis::sampleInfo[1:20,]),
-                    gene_metadata = reactive(rnaseqVis::gene_metadata[1:10,]),
-                    debug = debug)
+    data_list <- reactive({
+      req(input$load_data)
+      return(list(
+        counts = rnaseqVis::counts[1:10, 1:20],
+        sample_info = rnaseqVis::sampleInfo[1:20,],
+        gene_metadata = rnaseqVis::gene_metadata[1:10,]
+      ))
+    })
+    countPlotServer(
+      "rnaseq",
+      counts = reactive({ data_list()$counts }),
+      sample_info = reactive({ data_list()$sample_info }),
+      gene_metadata = reactive({ data_list()$gene_metadata }),
+      debug = debug
+    )
   }
   shinyApp(ui, server)
 }

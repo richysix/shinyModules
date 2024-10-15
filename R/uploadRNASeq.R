@@ -319,7 +319,7 @@ uploadRNASeqServer <-
 #'
 #' @examples
 #' uploadRNASeqApp()
-uploadRNASeqApp <- function(debug = FALSE) {
+uploadRNASeqApp <- function(debug = TRUE) {
   ui <- fluidPage(
     sidebarLayout(
       sidebarPanel(
