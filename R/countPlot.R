@@ -207,6 +207,8 @@ countPlotServer <- function(id, counts = NULL, sample_info = NULL,
     })
 
     output$count_plot <- renderPlot(plot())
+
+    return(list(gene1 = reactive({ input$count_plot_gene_select }) ))
   })
 }
 
@@ -372,6 +374,8 @@ countPlotApp <- function(debug = TRUE) {
       mainPanel(
         fluidRow(
           countPlotOutput('rnaseq'),
+          h4("Selected Gene"),
+          textOutput("selected_gene")
         ),
         width = 8
       )
@@ -387,13 +391,15 @@ countPlotApp <- function(debug = TRUE) {
         gene_metadata = rnaseqVis::gene_metadata[1:10,]
       ))
     })
-    countPlotServer(
+    gene_selected <- countPlotServer(
       "rnaseq",
       counts = reactive({ data_list()$counts }),
       sample_info = reactive({ data_list()$sample_info }),
       gene_metadata = reactive({ data_list()$gene_metadata }),
       debug = debug
     )
+
+    output$selected_gene <- renderText(gene_selected$gene1())
   }
   shinyApp(ui, server)
 }
