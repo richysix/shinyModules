@@ -64,11 +64,13 @@ countXYScatterPlotOutput <- function(id) {
 #'
 #' countXYScatterPlotServer("rnaseqData")
 #'
-countXYScatterPlotServer <- function(id, counts = NULL, sample_info = NULL,
-                                     gene_metadata = NULL, debug = FALSE) {
+countXYScatterPlotServer <-
+  function(id, counts = NULL, sample_info = NULL, gene_metadata = NULL,
+           gene1 = NULL, debug = FALSE) {
   stopifnot(is.reactive(counts))
   stopifnot(is.reactive(sample_info))
   stopifnot(is.reactive(gene_metadata))
+  stopifnot(is.reactive(gene1))
 
   moduleServer(id, function(input, output, session) {
     counts_long <- reactive({
@@ -85,7 +87,8 @@ countXYScatterPlotServer <- function(id, counts = NULL, sample_info = NULL,
       return(counts_long)
     })
 
-    plot_data_list <- xVyScatterplotServer("XYScatter", data = counts_long)
+    plot_data_list <- xVyScatterplotServer("XYScatter", data = counts_long,
+                                           xSelected = gene1)
     return(plot_data_list)
   })
 }
@@ -100,11 +103,12 @@ countXYScatterPlotServer <- function(id, counts = NULL, sample_info = NULL,
 #'
 #' @examples
 #' countXYScatterPlotApp()
-countXYScatterPlotApp <- function(debug = FALSE) {
+countXYScatterPlotApp <- function(debug = TRUE) {
   ui <- fluidPage(
     sidebarLayout(
       sidebarPanel(
-        countXYScatterPlotInput("countData", x_label = "Gene 1", y_label = "Gene 2")
+        countXYScatterPlotInput("countData", x_label = "Gene 1", y_label = "Gene 2"),
+        checkboxInput("change_default", "Change default gene")
       ),
       mainPanel(
         h3("Scatterplot:"),
@@ -127,6 +131,15 @@ countXYScatterPlotApp <- function(debug = FALSE) {
       sample = paste0("sample-", 1:24),
       condition = rep(c("wt", "hom"), each = 12)
     )
+
+    gene <- reactive({
+      req(input$change_default)
+      if (input$change_default) {
+        return("ENSTEST99")
+      } else {
+        return(NULL)
+      }
+    })
     countXYScatterPlotServer(
       "countData",
       counts = reactive({
@@ -134,6 +147,7 @@ countXYScatterPlotApp <- function(debug = FALSE) {
       }),
       sample_info = reactive({ samples }),
       gene_metadata = reactive({ metadata }),
+      gene1 = gene,
       debug = debug
     )
   }
