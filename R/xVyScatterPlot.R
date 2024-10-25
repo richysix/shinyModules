@@ -66,26 +66,68 @@ xVyScatterplotOutput <- function(id) {
 #'
 #' xVyScatterplotServer("rnaseqData")
 #'
-xVyScatterplotServer <- function(id, data = NULL, debug = FALSE) {
+xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALSE) {
   stopifnot(is.reactive(data))
+  stopifnot(is.reactive(xSelected))
 
   moduleServer(id, function(input, output, session) {
-    observe({
-      var_choices = unique(data()$variable)
-      updateSelectizeInput(
-        session,
-        inputId = "xVar",
-        choices = var_choices,
-        selected = var_choices[1]
-      )
-      updateSelectizeInput(
-        session,
-        inputId = "yVar",
-        choices = var_choices,
-        selected = var_choices[2]
-      )
-    }) |>
-      bindEvent(data())
+    observe(
+      {
+        var_choices <- unique(data()$variable)
+        updateSelectizeInput(
+          session,
+          inputId = "xVar",
+          choices = var_choices,
+          selected = var_choices[1]
+        )
+        updateSelectizeInput(
+          session,
+          inputId = "yVar",
+          choices = var_choices,
+          selected = var_choices[2]
+        )
+      },
+      priority = 1
+    ) |> bindEvent(data())
+
+    observe(
+      {
+        req(xSelected())
+        req(data())
+        var_choices <- unique(data()$variable)
+        updateSelectizeInput(
+          session,
+          inputId = "xVar",
+          choices = var_choices,
+          selected = xSelected()
+        )
+      },
+      priority = -1
+    ) |> bindEvent(xSelected())
+
+    observe(
+      {
+        req(input$xVar)
+        req(input$yVar)
+        req(data())
+        var_choices <- setdiff(unique(data()$variable), input$xVar)
+        if (input$yVar %in% var_choices) {
+          selected <- input$yVar
+        } else {
+          selected <- var_choices[1]
+        }
+        if (debug) {
+          print(var_choices)
+        }
+        updateSelectizeInput(
+          session,
+          inputId = "yVar",
+          choices = var_choices,
+          selected = selected
+        )
+      },
+      priority = 0
+    ) |> bindEvent(input$xVar)
 
     plot_data <- reactive({
       data <- req(data())
@@ -128,11 +170,12 @@ xVyScatterplotServer <- function(id, data = NULL, debug = FALSE) {
 #'
 #' @examples
 #' xVyScatterplotApp()
-xVyScatterplotApp <- function(debug = FALSE) {
+xVyScatterplotApp <- function(debug = TRUE) {
   ui <- fluidPage(
     sidebarLayout(
       sidebarPanel(
-        xVyScatterplotInput("countData", x_label = "X Var", y_label = "Y Var")
+        xVyScatterplotInput("countData", x_label = "X Var", y_label = "Y Var"),
+        checkboxInput("change_default", "Change default gene")
       ),
       mainPanel(
         h3("Scatterplot:"),
@@ -149,7 +192,17 @@ xVyScatterplotApp <- function(debug = FALSE) {
       y2 = -x1 + runif(100, min = -3, max = 3)
     ) |>
       tidyr::pivot_longer(cols = -sample, names_to = "variable")
-    xVyScatterplotServer("countData", data = reactive({test_data}), debug = debug)
+
+    gene <- reactive({
+      req(input$change_default)
+      if (input$change_default) {
+        return("y1")
+      } else {
+        return(NULL)
+      }
+    })
+    xVyScatterplotServer("countData", data = reactive({test_data}),
+                         xSelected = gene, debug = debug)
   }
   shinyApp(ui, server)
 }
