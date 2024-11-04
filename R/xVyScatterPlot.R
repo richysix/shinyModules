@@ -27,6 +27,7 @@ xVyScatterplotInput <-
       xInput <- selectizeInput(NS(id, "xVar"), x_label, choices = NULL)
     }
     tagList(
+      shinyjs::useShinyjs(),
       xInput,
       selectizeInput(NS(id, "yVar"), y_label, choices = NULL),
       checkboxInput(NS(id, "lm"), 'Add regression line', value = FALSE, width = NULL)
@@ -179,7 +180,6 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
 #' xVyScatterplotApp()
 xVyScatterplotApp <- function(debug = TRUE, hide_x = FALSE) {
   ui <- fluidPage(
-    useShinyjs(),
     sidebarLayout(
       sidebarPanel(
         xVyScatterplotInput("countData", x_label = "X Var", y_label = "Y Var",
