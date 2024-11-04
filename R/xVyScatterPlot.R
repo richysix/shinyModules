@@ -7,6 +7,7 @@
 #' [xVyScatterplotServer()] function.
 #' @param x_label character Label for X variable select input
 #' @param y_label character Label for Y variable select input
+#' @param hide_x logical. Whether to hide the X input select element
 #'
 #' @returns a [htmltools::tagList()] containing two [shiny::selectizeInput()]
 #' controls and one [shiny::checkboxInput()]
@@ -18,9 +19,15 @@
 #' xVyScatterplotInput("countData")
 #'
 xVyScatterplotInput <-
-  function(id, x_label = "X variable", y_label = "Y variable") {
+  function(id, x_label = "X variable", y_label = "Y variable",
+           hide_x = FALSE) {
+    if (hide_x) {
+      xInput <- shinyjs::hidden(selectizeInput(NS(id, "xVar"), x_label, choices = NULL))
+    } else {
+      xInput <- selectizeInput(NS(id, "xVar"), x_label, choices = NULL)
+    }
     tagList(
-      selectizeInput(NS(id, "xVar"), x_label, choices = NULL),
+      xInput,
       selectizeInput(NS(id, "yVar"), y_label, choices = NULL),
       checkboxInput(NS(id, "lm"), 'Add regression line', value = FALSE, width = NULL)
     )
@@ -170,11 +177,13 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
 #'
 #' @examples
 #' xVyScatterplotApp()
-xVyScatterplotApp <- function(debug = TRUE) {
+xVyScatterplotApp <- function(debug = TRUE, hide_x = FALSE) {
   ui <- fluidPage(
+    useShinyjs(),
     sidebarLayout(
       sidebarPanel(
-        xVyScatterplotInput("countData", x_label = "X Var", y_label = "Y Var"),
+        xVyScatterplotInput("countData", x_label = "X Var", y_label = "Y Var",
+                            hide_x = hide_x),
         checkboxInput("change_default", "Change default gene")
       ),
       mainPanel(

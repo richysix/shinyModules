@@ -4,7 +4,7 @@
 \alias{xVyScatterplotServer}
 \title{Server function to produce an xy scatter plot}
 \usage{
-xVyScatterplotServer(id, data = NULL, debug = FALSE)
+xVyScatterplotServer(id, data = NULL, xSelected = NULL, debug = FALSE)
 }
 \arguments{
 \item{id}{namespace id for the UI components. Must match the id provided to the

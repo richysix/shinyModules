@@ -4,7 +4,7 @@
 \alias{countXYScatterPlotApp}
 \title{A test shiny app for the countXYScatterPlot module}
 \usage{
-countXYScatterPlotApp(debug = FALSE)
+countXYScatterPlotApp(debug = TRUE, hide_x = FALSE)
 }
 \value{
 a [shiny::shinyApp()] object

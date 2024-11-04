@@ -9,7 +9,7 @@ countPlotServer(
   counts = NULL,
   sample_info = NULL,
   gene_metadata = NULL,
-  debug = NULL
+  debug = FALSE
 )
 }
 \arguments{

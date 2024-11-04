@@ -4,7 +4,7 @@
 \alias{xVyScatterplotApp}
 \title{A test shiny app for the xVyScatterplot module}
 \usage{
-xVyScatterplotApp(debug = FALSE)
+xVyScatterplotApp(debug = TRUE, hide_x = FALSE)
 }
 \value{
 a [shiny::shinyApp()] object

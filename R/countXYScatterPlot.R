@@ -7,6 +7,7 @@
 #' [countXYScatterPlotServer()] function.
 #' @param x_label character Label for X variable select input
 #' @param y_label character Label for Y variable select input
+#' @param hide_x logical. Whether to hide the X input select element
 #'
 #' @returns a [htmltools::tagList()] containing two [shiny::selectizeInput()]
 #' controls and one [shiny::checkboxInput()]
@@ -18,8 +19,9 @@
 #' countXYScatterPlotInput("countData")
 #'
 countXYScatterPlotInput <-
-  function(id, x_label = "Gene1 X:", y_label = "Gene2 Y:") {
-    xVyScatterplotInput(id = NS(id, "XYScatter"), x_label = x_label, y_label = y_label)
+  function(id, x_label = "Gene1 X:", y_label = "Gene2 Y:", hide_x = FALSE) {
+    xVyScatterplotInput(id = NS(id, "XYScatter"), x_label = x_label,
+                        y_label = y_label, hide_x = hide_x)
 }
 
 #' Create Output to display the Scatterplot
@@ -103,11 +105,13 @@ countXYScatterPlotServer <-
 #'
 #' @examples
 #' countXYScatterPlotApp()
-countXYScatterPlotApp <- function(debug = TRUE) {
+countXYScatterPlotApp <- function(debug = TRUE, hide_x = FALSE) {
   ui <- fluidPage(
+    useShinyjs(),
     sidebarLayout(
       sidebarPanel(
-        countXYScatterPlotInput("countData", x_label = "Gene 1", y_label = "Gene 2"),
+        countXYScatterPlotInput("countData", x_label = "Gene 1",
+                                y_label = "Gene 2", hide_x = hide_x),
         checkboxInput("change_default", "Change default gene")
       ),
       mainPanel(

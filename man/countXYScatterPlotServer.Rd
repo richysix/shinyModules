@@ -9,6 +9,7 @@ countXYScatterPlotServer(
   counts = NULL,
   sample_info = NULL,
   gene_metadata = NULL,
+  gene1 = NULL,
   debug = FALSE
 )
 }

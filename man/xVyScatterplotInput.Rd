@@ -4,7 +4,12 @@
 \alias{xVyScatterplotInput}
 \title{Create UI components to select the variables to plot against each other}
 \usage{
-xVyScatterplotInput(id, x_label = "X variable", y_label = "Y variable")
+xVyScatterplotInput(
+  id,
+  x_label = "X variable",
+  y_label = "Y variable",
+  hide_x = FALSE
+)
 }
 \arguments{
 \item{id}{namespace id for the UI components. Must match the id provided to the
@@ -13,6 +18,8 @@ xVyScatterplotInput(id, x_label = "X variable", y_label = "Y variable")
 \item{x_label}{character Label for X variable select input}
 
 \item{y_label}{character Label for Y variable select input}
+
+\item{hide_x}{logical. Whether to hide the X input select element}
 }
 \value{
 a [htmltools::tagList()] containing two [shiny::selectizeInput()]
