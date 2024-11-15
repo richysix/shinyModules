@@ -18,6 +18,7 @@
 #'
 uploadRNASeqInput <- function(id) {
   tagList(
+    shinyjs::useShinyjs(),
     fileInput(NS(id, "sampleFile"), "Sample File"),
     fileInput(NS(id, "countFile"), "Count File"),
     checkboxInput(NS(id, "testdata"), 'Use test data', value = FALSE, width = NULL)
@@ -29,14 +30,14 @@ uploadRNASeqInput <- function(id) {
 #' `uploadRNASeqOutput()` produces three table outputs for displaying
 #' the data returned by the `uploadRNASeqServer()` function. The three
 #' outputs are labelled samples, counts and metadata. There are also two
-#' [shinyBS::bsAlert()] anchor points to alert the user to missing data in
+#' [shiny::uiOutput()]s to alert the user to missing data in
 #' either the sample or count file
 #'
 #' @param id namespace id for the UI components. Must match the id provided to the
 #' [uploadRNASeqServer()] function.
 #'
 #' @returns a [htmltools::tagList()] containing three [shiny::tableOutput()]s
-#' and two [shinyBS::bsAlert()] anchor points.
+#' and two [shiny::uiOutput()]s.
 #'
 #' @export
 #'
@@ -47,10 +48,10 @@ uploadRNASeqInput <- function(id) {
 uploadRNASeqOutput <- function(id) {
   tagList(
     h3("Sample Data:"),
-    shinyBS::bsAlert(NS(id, "countsInputAlert")),
+    uiOutput(NS(id, "countsInputAlert")),
     tableOutput("samples"),
     h3("Count Data:"),
-    shinyBS::bsAlert(NS(id, "sampleInputAlert")),
+    uiOutput(NS(id, "sampleInputAlert")),
     tableOutput("counts"),
     h3("Gene Metadata:"),
     tableOutput("metadata")
@@ -160,8 +161,8 @@ uploadRNASeqServer <-
       }
 
       # close any open alerts
-      shinyBS::closeAlert(session, "sampleIdsAlert")
-      shinyBS::closeAlert(session, "countSampleIdsAlert")
+      shinyjs::runjs(glue::glue('$("#{id}-countsInputAlert button").click()'))
+      shinyjs::runjs(glue::glue('$("#{id}-sampleInputAlert button").click()'))
       sample_subset <- tryCatch(
         { rnaseqtools::check_samples_match_counts(counts, sample_info)
           return(sample_info) },
@@ -174,9 +175,14 @@ uploadRNASeqServer <-
               msg <- paste("<b>None</b> of the samples in the samples file match any of those in the counts file.",
                            sep = "<br>")
               # generate alert
-              shinyBS::createAlert(session, anchorId = NS(id, "sampleInputAlert"),
-                                   alertId = "sampleIdsAlert", title = "Sample IDs missing from counts",
-                                   content = msg, append = FALSE, style = "danger"
+              output$sampleInputAlert <- renderUI(
+                shinyWidgets::alert(
+                  tags$h4("Sample IDs missing from counts"),
+                  tags$b("None"),
+                  " of the samples in the samples file match any of those in the counts file.",
+                  status = "danger",
+                  dismissible = TRUE
+                )
               )
               return(NULL)
             }
@@ -188,13 +194,16 @@ uploadRNASeqServer <-
             } else {
               msg <- w$message
             }
-            msg <- paste(msg, "These samples have been removed from the sample information",
-                         "If you want these samples included, they must also be present in the counts file",
-                         sep = "<br>")
-            # generate alert
-            shinyBS::createAlert(session, anchorId = NS(id, "sampleInputAlert"),
-                                 alertId = "sampleIdsAlert", title = "Sample IDs missing from counts",
-                                 content = msg, append = FALSE, style = "warning"
+            output$sampleInputAlert <- renderUI(
+              shinyWidgets::alert(
+                tags$h4("Sample IDs missing from counts"),
+                msg, tags$br(),
+                "These samples have been removed from the sample information",
+                tags$br(),
+                "If you want these samples included, they must also be present in the counts file",
+                status = "warning",
+                dismissible = TRUE
+              )
             )
           } else {
             samples <- sample_info
@@ -223,12 +232,14 @@ uploadRNASeqServer <-
             matching_samples <- intersect(sample_info$sample, count_samples)
             if (length(matching_samples) == 0) {
               # create an alert and return NULL
-              msg <- paste("<b>None</b> of the samples in the counts file match any of those in the samples file.",
-                           sep = "<br>")
-              # generate alert
-              shinyBS::createAlert(session, anchorId = NS(id, "countsInputAlert"),
-                                   alertId = "countSampleIdsAlert", title = "Sample IDs missing from samples file",
-                                   content = msg, append = FALSE, style = "danger"
+              output$countsInputAlert <- renderUI(
+                shinyWidgets::alert(
+                  tags$h4("Sample IDs missing from samples file"),
+                  tags$b("None"),
+                  " of the samples in the counts file match any of those in the samples file.",
+                  status = "danger",
+                  dismissible = TRUE
+                )
               )
               return(NULL)
             }
@@ -240,13 +251,17 @@ uploadRNASeqServer <-
             } else {
               msg <- w$message
             }
-            msg <- paste(msg, "These samples have been removed from the count data",
-                         "If you want these samples included, they must be present in the samples file",
-                         sep = "<br>")
-            # generate alert
-            shinyBS::createAlert(session, anchorId = NS(id, "countsInputAlert"),
-                                 alertId = "countSampleIdsAlert", title = "Sample IDs missing from samples file",
-                                 content = msg, append = FALSE, style = "warning"
+            output$countsInputAlert <- renderUI(
+              shinyWidgets::alert(
+                tags$h4("Sample IDs missing from samples file"),
+                msg,
+                tags$br(),
+                "These samples have been removed from the count data",
+                tags$br(),
+                "If you want these samples included, they must be present in the samples file",
+                status = "warning",
+                dismissible = TRUE
+              )
             )
           } else {
             rnaseq_subset <- rnaseq_data
