@@ -57,7 +57,7 @@ countPlotInput <- function(id) {
 #'
 countPlotOutput <- function(id) {
   tagList(
-    shinyBS::bsAlert(NS(id, "shapeLevelsWarning")),
+    uiOutput(NS(id, "shapeLevelsWarning")),
     plotOutput(NS(id, "count_plot"))
   )
 }
@@ -134,21 +134,26 @@ countPlotServer <- function(id, counts = NULL, sample_info = NULL,
                         choices = categorical_columns, selected = selected)
 
       # for shape only use columns with fewer than 6 levels
-      columns_to_use <- sapply(categorical_columns, function(col){ nlevels(factor(sample_info()[[col]])) <= 6 })
-      shapes_warning <-
-        paste0(
-          "Some of the shape variables have too many levels and ",
-          "will not be available for selecting as shape.<br>Variables removed: ",
-          paste(names(columns_to_use)[!columns_to_use], collapse = ", ")
+      fct_nlevels <- sapply(categorical_columns, function(col){ nlevels(factor(sample_info()[[col]])) })
+      if (any(fct_nlevels > 6)) {
+        non_shape_columns <- names(fct_nlevels)[ fct_nlevels > 6 ]
+        # generate alert
+        output$shapeLevelsWarning <- renderUI(
+          shinyWidgets::alert(
+            tags$h4("Too many shape levels"),
+            "Some of the shape variables have too many levels and ",
+            "will not be available for selecting as shape.",
+            tags$br(),
+            tags$strong("Variables removed: "),
+            paste(non_shape_columns, collapse = ", "),
+            status = "warning",
+            dismissible = TRUE
+          )
         )
-      shinyBS::createAlert(
-        session, anchorId = NS(id, "shapeLevelsWarning"),
-        alertId = "tooManyLevels", title = "Too many shape levels",
-        content = shapes_warning, append = FALSE, style = "warning"
-      )
-
+      }
+      columns_to_use <- names(fct_nlevels)[ fct_nlevels <= 6 ]
       updateSelectInput(session, inputId = "shape_var",
-                        choices = c("None", names(columns_to_use)[columns_to_use]))
+                        choices = c("None", columns_to_use))
     }) |> bindEvent(sample_info())
 
     plot <- reactive({
@@ -369,6 +374,7 @@ create_shape_palette <- function(shape_vec) {
 countPlotApp <- function(debug = TRUE) {
   # library(shinyBS)
   ui <- fluidPage(
+    theme = bslib::bs_theme(version = 5),
     sidebarLayout(
       sidebarPanel(
         countPlotInput('rnaseq'),
