@@ -100,8 +100,12 @@ countPlotServer <- function(id, counts = NULL, sample_info = NULL,
     observe({
       req(gene_metadata())
       gene_ids <- gene_metadata()$GeneID
-      updateSelectInput(session, inputId = "count_plot_gene_select",
-                        choices = gene_ids)
+      updateSelectizeInput(
+        session,
+        inputId = "count_plot_gene_select",
+        choices = gene_ids,
+        server = TRUE
+      )
     }) |> bindEvent(gene_metadata())
 
     # update fill variable with categorical column
