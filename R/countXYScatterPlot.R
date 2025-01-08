@@ -107,7 +107,7 @@ countXYScatterPlotServer <-
 #' countXYScatterPlotApp()
 countXYScatterPlotApp <- function(debug = TRUE, hide_x = FALSE) {
   ui <- fluidPage(
-    useShinyjs(),
+    shinyjs::useShinyjs(),
     sidebarLayout(
       sidebarPanel(
         countXYScatterPlotInput("countData", x_label = "Gene 1",

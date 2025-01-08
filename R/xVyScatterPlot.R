@@ -86,13 +86,15 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
           session,
           inputId = "xVar",
           choices = var_choices,
-          selected = var_choices[1]
+          selected = var_choices[1],
+          server = TRUE
         )
         updateSelectizeInput(
           session,
           inputId = "yVar",
           choices = var_choices,
-          selected = var_choices[2]
+          selected = var_choices[2],
+          server = TRUE
         )
       },
       priority = 1
@@ -107,7 +109,8 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
           session,
           inputId = "xVar",
           choices = var_choices,
-          selected = xSelected()
+          selected = xSelected(),
+          server = TRUE
         )
       },
       priority = -1
@@ -131,7 +134,8 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
           session,
           inputId = "yVar",
           choices = var_choices,
-          selected = selected
+          selected = selected,
+          server = TRUE
         )
       },
       priority = 0
