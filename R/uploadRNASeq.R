@@ -195,7 +195,7 @@ uploadRNASeqServer <-
         shinyjs::runjs(glue::glue('$("#{id}-sampleInputAlert button").click()'))
         sample_subset <- tryCatch(
           { rnaseqtools::check_samples_match_counts(counts, sample_info)
-            return(sample_info) },
+            sample_info },
           warning = function(w) {
             if (any(grepl("missing_from.*_counts", class(w)))) {
               # subset sample info to samples in counts
@@ -251,7 +251,7 @@ uploadRNASeqServer <-
         }
         rnaseq_data_subset <- tryCatch(
           { rnaseqtools::check_samples_match_counts(counts, sample_info)
-            return(rnaseq_data) },
+            rnaseq_data },
           warning = function(w) {
             if (any(grepl("missing_from.*_samples", class(w)))) {
               # subset rnaseq_data to samples
@@ -382,9 +382,30 @@ uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
       testing = testing,
       debug = debug
     )
-    output$samples <- renderTable(data_list$sample_info()[1:5,1:5])
-    output$counts <- renderTable(data_list$counts()[1:5,1:10])
-    output$metadata <- renderTable(data_list$gene_metadata()[1:5,])
+    output$samples <- renderTable({
+      samples <- data_list$sample_info()
+      if (ncol(samples) > 5) {
+        samples[1:5,1:5]
+      } else {
+        samples[1:5,]
+      }
+    })
+    output$counts <- renderTable({
+      counts <- data_list$counts()
+      if (ncol(counts) > 10) {
+        counts[1:5,1:10]
+      } else {
+        counts[1:5,]
+      }
+    })
+    output$metadata <- renderTable({
+      gene_metadata <- data_list$gene_metadata()
+      if (ncol(gene_metadata) > 5) {
+        gene_metadata[1:5,1:5]
+      } else {
+        gene_metadata[1:5,]
+      }
+    })
   }
   shinyApp(ui, server)
 }
