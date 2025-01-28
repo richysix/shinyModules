@@ -30,7 +30,13 @@ xVyScatterplotInput <-
       shinyjs::useShinyjs(),
       xInput,
       selectizeInput(NS(id, "yVar"), y_label, choices = NULL),
-      checkboxInput(NS(id, "lm"), 'Add regression line', value = FALSE, width = NULL)
+      checkboxInput(NS(id, "lm"), 'Add regression line', value = FALSE, width = NULL),
+      checkboxInput(NS(id, "cor"), 'Show correlation coefficient', value = FALSE, width = NULL),
+      radioButtons(
+        NS(id, "cor_method"),
+        label = "Correlation method",
+        choices = c("spearman", "pearson"),
+      )
     )
 }
 
@@ -162,6 +168,26 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
       if (input$lm) {
         p <- p +
           ggplot2::geom_smooth(method = "lm", formula = y ~ x, fill = "orange")
+      }
+      if (input$cor) {
+        # calculate correlation coefficient
+        cor_val <- cor(
+          plot_data[[x_var]],
+          plot_data[[y_var]],
+          method = input$cor_method
+        ) |> round(digits = 3)
+        text <-
+        p <- p +
+          ggplot2::annotate(
+            "label",
+            x = min(plot_data[[x_var]])*0.8,
+            y = max(plot_data[[y_var]])*0.9,
+            label = glue::glue("rho == {cor_val}"),
+            parse = TRUE,
+            size.unit = "pt",
+            size = 16,
+            colour = "firebrick4"
+          )
       }
       return(p)
     })
