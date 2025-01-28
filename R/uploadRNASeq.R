@@ -21,6 +21,7 @@ uploadRNASeqInput <- function(id) {
     shinyjs::useShinyjs(),
     fileInput(NS(id, "sampleFile"), "Sample File"),
     fileInput(NS(id, "countFile"), "Count File"),
+    checkboxInput(NS(id, "tpm"), 'Data is TPM, not counts', value = FALSE, width = NULL),
     checkboxInput(NS(id, "testdata"), 'Use test data', value = FALSE, width = NULL)
   )
 }
@@ -82,12 +83,14 @@ uploadRNASeqOutput <- function(id) {
 uploadRNASeqServer <-
   function(id, test_data_paths = list(count_file = NULL, sample_file = NULL),
            testing = FALSE, debug = FALSE) {
-    print(
-      glue::glue(
-        "Inside uploadRNASeqServer:\n",
-        "Testing = {testing}\n",
-        "Debug = {debug}\n")
-    )
+    if (debug) {
+      print(
+        glue::glue(
+          "Inside uploadRNASeqServer:\n",
+          "Testing = {testing}\n",
+          "Debug = {debug}\n")
+      )
+    }
     moduleServer(id, function(input, output, session) {
       # set up observer to untick test data checkbox if a sample/count
       # file is uploaded
@@ -96,13 +99,25 @@ uploadRNASeqServer <-
       }) |>
         bindEvent(input$sampleFile, input$countFile)
 
-      print(
-        glue::glue(
-          "Inside uploadRNASeqServer::moduleServer:\n",
-          "Testing = {testing}\n",
-          "Debug = {debug}\n"
+      observe({
+        updateCheckboxInput(session, "testdata", value = FALSE)
+      }) |>
+        bindEvent(input$tpm)
+
+      observe({
+        updateCheckboxInput(session, "tpm", value = FALSE)
+      }) |>
+        bindEvent(input$testdata)
+
+      if (debug) {
+        print(
+          glue::glue(
+            "Inside uploadRNASeqServer::moduleServer:\n",
+            "Testing = {testing}\n",
+            "Debug = {debug}\n"
+          )
         )
-      )
+      }
       if (testing) {
         print(shiny::getCurrentTheme())
         print(glue::glue("Bootstrap version is: ",
@@ -185,9 +200,13 @@ uploadRNASeqServer <-
           print(head(sample_info))
           print(head(rnaseq_data))
         }
-        counts <- rnaseqtools::get_counts(rnaseq_data, normalised = TRUE)
-        if (is.null(counts)) {
-          counts <- rnaseqtools::get_counts(rnaseq_data)
+        if (input$tpm) {
+          counts <- rnaseqtools::get_tpm(rnaseq_data)
+        } else {
+          counts <- rnaseqtools::get_counts(rnaseq_data, normalised = TRUE)
+          if (is.null(counts)) {
+            counts <- rnaseqtools::get_counts(rnaseq_data)
+          }
         }
 
         # close any open alerts
@@ -326,17 +345,23 @@ uploadRNASeqServer <-
       count_data <- reactive({
         req(rnaseq_data())
         req(sample_info())
-        norm_counts <- rnaseqtools::get_counts(rnaseq_data(), normalised = TRUE)
-        # if file does not have normalised counts, get raw counts and normalise
-        if (is.null(norm_counts)) {
-          norm_data <- rnaseqtools::normalise_counts(rnaseq_data(), sample_info())
-          if (debug) {
-            message("count_data reactive: normalise_counts")
-            print(head(norm_data))
+
+        if (input$tpm) {
+          tpm <- rnaseqtools::get_tpm(rnaseq_data())
+          return(tpm)
+        } else {
+          norm_counts <- rnaseqtools::get_counts(rnaseq_data(), normalised = TRUE)
+          # if file does not have normalised counts, try to get raw counts and normalise
+          if (is.null(norm_counts)) {
+            norm_data <- rnaseqtools::normalise_counts(rnaseq_data(), sample_info())
+            if (debug) {
+              message("count_data reactive: normalise_counts")
+              print(head(norm_data))
+            }
+            norm_counts <- rnaseqtools::get_counts(norm_data, normalised = TRUE)
           }
-          norm_counts <- rnaseqtools::get_counts(norm_data, normalised = TRUE)
+          return(norm_counts)
         }
-        return(norm_counts)
       })
 
       # extract gene metadata
@@ -364,6 +389,7 @@ uploadRNASeqServer <-
 #' @examples
 #' uploadRNASeqApp()
 uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
+  options(shiny.maxRequestSize = 30*1024^2)
   ui <- fluidPage(
     theme = bslib::bs_theme(version = 5),
     sidebarLayout(
