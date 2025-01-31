@@ -35,7 +35,7 @@ xVyScatterplotInput <-
       radioButtons(
         NS(id, "cor_method"),
         label = "Correlation method",
-        choices = c("spearman", "pearson"),
+        choices = c("spearman", "pearson", "cosine"),
       )
     )
 }
@@ -171,22 +171,38 @@ xVyScatterplotServer <- function(id, data = NULL, xSelected = NULL, debug = FALS
       }
       if (input$cor) {
         # calculate correlation coefficient
-        cor_val <- cor(
-          plot_data[[x_var]],
-          plot_data[[y_var]],
-          method = input$cor_method
-        ) |> round(digits = 3)
-        text <-
+        if ((input$cor_method) == "cosine") {
+          cor_val <- coop::cosine(
+            plot_data[[x_var]],
+            plot_data[[y_var]]
+          ) |> round(digits = 3)
+        } else {
+          cor_val <- cor(
+            plot_data[[x_var]],
+            plot_data[[y_var]],
+            method = input$cor_method
+          ) |> round(digits = 3)
+        }
+
+        # gets plot limits to position text
+        build_obj <- ggplot2::ggplot_build(p)
+        x_lims <- build_obj$layout$panel_params[[1]]$x.range
+        x_range <- x_lims[2] - x_lims[1]
+        text_x_pos <- x_lims[1] + 0.05*x_range
+        y_lims <- build_obj$layout$panel_params[[1]]$y.range
+        y_range <- y_lims[2] - y_lims[1]
+        text_y_pos <- y_lims[2] - 0.1*y_range
         p <- p +
           ggplot2::annotate(
             "label",
-            x = min(plot_data[[x_var]])*0.8,
-            y = max(plot_data[[y_var]])*0.9,
-            label = glue::glue("rho == {cor_val}"),
+            x = text_x_pos,
+            y = text_y_pos,
+            label = glue::glue("{input$cor_method} == {cor_val}"),
             parse = TRUE,
             size.unit = "pt",
             size = 16,
-            colour = "firebrick4"
+            colour = "firebrick4",
+            hjust = "left"
           )
       }
       return(p)
