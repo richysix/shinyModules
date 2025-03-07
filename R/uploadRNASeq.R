@@ -118,21 +118,6 @@ uploadRNASeqServer <-
           )
         )
       }
-      if (testing) {
-        print(shiny::getCurrentTheme())
-        print(glue::glue("Bootstrap version is: ",
-                         "{bslib::theme_version(shiny::getCurrentTheme())}"))
-        output$testing_msg <- renderPrint({
-            glue::glue("Bootstrap version is: ",
-                       "{bslib::theme_version(shiny::getCurrentTheme())}")
-        })
-        if (debug) {
-          print(
-            glue::glue("Bootstrap version is: ",
-                       "{bslib::theme_version(shiny::getCurrentTheme())}")
-          )
-        }
-      }
 
       # return sample file path depending on whether the test data checkbox is checked
       sample_file <- reactive({
