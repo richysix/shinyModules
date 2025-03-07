@@ -16,13 +16,13 @@
 #'
 #' uploadRNASeqInput("rnaseqData")
 #'
-uploadRNASeqInput <- function(id) {
+uploadRNASeqInput <- function(id, testing = FALSE) {
   tagList(
     shinyjs::useShinyjs(),
     fileInput(NS(id, "sampleFile"), "Sample File"),
     fileInput(NS(id, "countFile"), "Count File"),
     checkboxInput(NS(id, "tpm"), 'Data is TPM, not counts', value = FALSE, width = NULL),
-    checkboxInput(NS(id, "testdata"), 'Use test data', value = FALSE, width = NULL)
+    checkboxInput(NS(id, "testdata"), 'Use test data', value = testing, width = NULL)
   )
 }
 
@@ -97,12 +97,12 @@ uploadRNASeqServer <-
       observe({
         updateCheckboxInput(session, "testdata", value = FALSE)
       }) |>
-        bindEvent(input$sampleFile, input$countFile)
+        bindEvent(input$sampleFile, input$countFile, ignoreInit = TRUE)
 
       observe({
         updateCheckboxInput(session, "testdata", value = FALSE)
       }) |>
-        bindEvent(input$tpm)
+        bindEvent(input$tpm, ignoreInit = TRUE)
 
       observe({
         updateCheckboxInput(session, "tpm", value = FALSE)
@@ -394,7 +394,7 @@ uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
     theme = bslib::bs_theme(version = 5),
     sidebarLayout(
       sidebarPanel(
-        uploadRNASeqInput("rnaseqData")
+        uploadRNASeqInput("rnaseqData", testing = testing)
       ),
       mainPanel(
         uploadRNASeqOutput("rnaseqData"),
