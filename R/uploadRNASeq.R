@@ -119,53 +119,24 @@ uploadRNASeqServer <-
         )
       }
 
-      # return sample file path depending on whether the test data checkbox is checked
-      sample_file <- reactive({
+      # load sample data from file
+      init_sample_info <- reactive({
         if (input$testdata) {
-          if (debug) print(test_data_paths)
-          if (is.null(test_data_paths$sample_file)) {
-            file_path <- system.file("extdata", "zfs-rnaseq-sampleInfo.tsv", package = "rnaseqVis")
-          } else {
-            file_path <- test_data_paths$sample_file
-          }
-          if (debug) message(paste0("Sample Info path = ", file_path))
-          return(file_path)
+          return(rnaseqtools::sample_info)
         } else {
-          if (debug) message(paste0("Sample Info path = ", input$sampleFile$name))
-          return(input$sampleFile$datapath)
+          req(input$sampleFile$datapath)
+          rnaseqtools::load_rnaseq_samples(input$sampleFile$datapath)
         }
       })
 
       # load sample data from file
-      init_sample_info <- reactive({
-        req(sample_file())
-        rnaseqtools::load_rnaseq_samples(sample_file())
-      })
-
-      # return counts file path depending on whether the test data checkbox is checked
-      counts_file <- reactive({
-        if (input$testdata) {
-          if (is.null(test_data_paths$counts_file)) {
-            file_path <- system.file("extdata", "counts.shield-subset.tsv", package = "rnaseqVis")
-          } else {
-            file_path <- test_data_paths$counts_file
-          }
-          if (debug) message(paste0("Count Data path = ", file_path))
-          return(file_path)
-        } else {
-          if (debug) message(paste0("Count Data path = ", input$countFile$name))
-          return(input$countFile$datapath)
-        }
-      })
-      # load rnaseq data from file
       init_rnaseq_data <- reactive({
-        req(counts_file())
-        counts <- rnaseqtools::load_rnaseq_data(counts_file())
-        if (debug) {
-          message("Loaded data file:")
-          print(head(counts))
+        if (input$testdata) {
+          return(rnaseqtools::count_data)
+        } else {
+          req(input$countFile$datapath)
+          rnaseqtools::load_rnaseq_data(input$countFile$datapath)
         }
-        return(counts)
       })
 
       # This takes the samples and counts data frames and checks whether
@@ -175,8 +146,7 @@ uploadRNASeqServer <-
       # same sample in each. This ensures that if we need to use DESeq2 to
       # calculate normalised counts the sample data will match
       all_data <- reactive({
-        req(init_sample_info())
-        req(init_rnaseq_data())
+        req(init_sample_info(), init_rnaseq_data())
 
         sample_info <- init_sample_info()
         rnaseq_data <- init_rnaseq_data()
@@ -328,8 +298,7 @@ uploadRNASeqServer <-
       # by using DESeq2 to calculate them
       # This may need a progress bar at some point
       count_data <- reactive({
-        req(rnaseq_data())
-        req(sample_info())
+        req(rnaseq_data(), sample_info())
 
         if (input$tpm) {
           tpm <- rnaseqtools::get_tpm(rnaseq_data())
