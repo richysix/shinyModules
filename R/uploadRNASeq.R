@@ -132,7 +132,7 @@ uploadRNASeqServer <-
       # load sample data from file
       init_rnaseq_data <- reactive({
         if (input$testdata) {
-          return(rnaseqtools::count_data)
+          return(rnaseqtools::rnaseq_all_data)
         } else {
           req(input$countFile$datapath)
           rnaseqtools::load_rnaseq_data(input$countFile$datapath)
