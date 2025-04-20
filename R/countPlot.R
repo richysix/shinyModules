@@ -84,9 +84,9 @@ countPlotOutput <- function(id) {
 #'
 #' @examples
 #'
-#' countPlotServer("rnaseq", counts = reactive(rnaseqVis::counts[1:10, 1:20]),
-#' sample_info = reactive(rnaseqVis::sampleInfo[1:20,]),
-#' gene_metadata = reactive(rnaseqVis::gene_metadata[1:10,]))
+#' countPlotServer("rnaseq", counts = reactive(rnaseqtools::counts[1:10, 1:20]),
+#' sample_info = reactive(rnaseqtools::sampleInfo[1:20,]),
+#' gene_metadata = reactive(rnaseqtools::gene_metadata[1:10,]))
 #'
 countPlotServer <- function(id, counts = NULL, sample_info = NULL,
                           gene_metadata = NULL, debug = FALSE) {
@@ -372,7 +372,6 @@ create_shape_palette <- function(shape_vec) {
 #' countPlotApp()
 #'
 countPlotApp <- function(debug = TRUE) {
-  # library(shinyBS)
   ui <- fluidPage(
     theme = bslib::bs_theme(version = 5),
     sidebarLayout(
@@ -396,9 +395,9 @@ countPlotApp <- function(debug = TRUE) {
     data_list <- reactive({
       req(input$load_data)
       return(list(
-        counts = rnaseqVis::counts[1:10, 1:20],
-        sample_info = rnaseqVis::sampleInfo[1:20,],
-        gene_metadata = rnaseqVis::gene_metadata[1:10,]
+        counts = rnaseqtools::counts[1:10, 1:20],
+        sample_info = rnaseqtools::sampleInfo[1:20,],
+        gene_metadata = rnaseqtools::gene_metadata[1:10,]
       ))
     })
     gene_selected <- countPlotServer(
