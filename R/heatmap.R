@@ -1,5 +1,4 @@
 library(shiny)
-library(rnaseqVis)
 
 #' A heatmap controls UI module
 #'
