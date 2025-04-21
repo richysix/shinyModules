@@ -112,7 +112,7 @@ uploadRNASeqServer <-
       if (debug) {
         print(
           glue::glue(
-            "Inside uploadRNASeqServer::moduleServer:\n",
+            "Inside uploadRNASeqServer-moduleServer:\n",
             "Testing = {testing}\n",
             "Debug = {debug}\n"
           )
@@ -356,7 +356,7 @@ uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
     )
   )
   server <- function(input, output, session) {
-    if (debug) print(glue::glue("Inside uploadRNASeqApp::server\nTesting = {testing}"))
+    if (debug) print(glue::glue("Inside uploadRNASeqApp-server\nTesting = {testing}"))
     data_list <- uploadRNASeqServer(
       "rnaseqData",
       testing = testing,
