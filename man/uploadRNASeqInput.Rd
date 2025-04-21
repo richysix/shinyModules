@@ -4,7 +4,7 @@
 \alias{uploadRNASeqInput}
 \title{Create UI components to upload sample and count files}
 \usage{
-uploadRNASeqInput(id)
+uploadRNASeqInput(id, testing = FALSE)
 }
 \arguments{
 \item{id}{namespace id for the UI components. Must match the id provided to the

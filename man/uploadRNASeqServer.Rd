@@ -7,6 +7,7 @@
 uploadRNASeqServer(
   id,
   test_data_paths = list(count_file = NULL, sample_file = NULL),
+  testing = FALSE,
   debug = FALSE
 )
 }

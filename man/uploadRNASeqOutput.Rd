@@ -12,13 +12,13 @@ uploadRNASeqOutput(id)
 }
 \value{
 a [htmltools::tagList()] containing three [shiny::tableOutput()]s
-and two [shinyBS::bsAlert()] anchor points.
+and two [shiny::uiOutput()]s.
 }
 \description{
 `uploadRNASeqOutput()` produces three table outputs for displaying
 the data returned by the `uploadRNASeqServer()` function. The three
 outputs are labelled samples, counts and metadata. There are also two
-[shinyBS::bsAlert()] anchor points to alert the user to missing data in
+[shiny::uiOutput()]s to alert the user to missing data in
 either the sample or count file
 }
 \examples{
