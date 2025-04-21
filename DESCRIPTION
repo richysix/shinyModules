@@ -1,19 +1,37 @@
 Package: shinyModules
 Type: Package
 Title: UI/Server Modules For My Common Tasks
-Version: 0.0.1.4
+Version: 0.0.1.5
 Authors@R: 
     person("Richard", "White", , "rich@buschlab.org", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-1842-412X"))
 Description: This is a set of Shiny Modules to encapsulate
     things I commonly use to allow reuse in multiple Shiny Apps
 Imports:
+    biovisr (>= 0.1.9),
+    bslib,
+    coop,
+    dplyr,
+    ggplot2,
+    glue,
+    htmltools,
+    miscr (>= 0.0.0.9006),
+    purrr,
+    rlang,
     rnaseqtools,
-    shinyjs
-Depends: R (>= 3.6.1), shiny, shinyBS
+    scales,
+    shiny,
+    shinyjs,
+    shinyWidgets,
+    tibble,
+    tidyr
+Depends: R (>= 3.6.1)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Suggests: 
     testthat
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
+Remotes: 
+    richysix/biovisr,
+    richysix/miscr
