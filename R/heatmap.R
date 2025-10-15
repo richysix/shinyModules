@@ -21,8 +21,9 @@ heatmapInput <- function(id) {
         radioButtons(
           NS(id, "heatmap_colour_scale"),
           label = h4("Colour scale"),
-          choices = list("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdGy"),
-          selected = "RdBu"
+          choices = list('magma', 'inferno', 'plasma', 'viridis',
+                         'cividis', 'rocket', 'mako', 'turbo'),
+          selected = "plasma"
         )
       ),
       id = "heatmap_controls_accordion",
@@ -102,39 +103,66 @@ heatmapServer <- function(id, counts = NULL, sample_info = NULL,
     observe({
       if (debug) print(glue::glue("Palette Type = {palette_type()}"))
       if (palette_type() == "diverging") {
-        updateRadioButtons(inputId = "heatmap_colour_scale", choices = div_palette_names)
+        updateRadioButtons(
+          inputId = "heatmap_colour_scale",
+          choices = div_palette_names,
+          selected = "RdBu"
+        )
       } else {
-        updateRadioButtons(inputId = "heatmap_colour_scale", choices = seq_palette_names)
+        updateRadioButtons(
+          inputId = "heatmap_colour_scale",
+          choices = seq_palette_names,
+          selected = "plasma"
+        )
       }
     }) |> bindEvent(palette_type())
 
     plot <- reactive({
-      req(counts(), sample_info(), gene_metadata(), transform())
-
-      # show gene names if matrix is small enough
-      counts <- counts()
-      if (nrow(counts) <= 100) {
-        gene_names <- get_gene_labels(gene_metadata())
-      } else {
-        gene_names <- FALSE
-      }
-      # show sample names if matrix is small enough
-      sample_info <- sample_info()
-      if (ncol(counts) <= 48) {
-        sample_names <- get_sample_labels(sample_info(), colnames(counts))
-      } else {
-        sample_names <- FALSE
-      }
-
-      plot <- biovisr::matrix_heatmap(
-        counts, fill_palette = input$heatmap_colour_scale,
-        xaxis_labels = sample_names, yaxis_labels = gene_names)
-
-      return(plot)
+      req(counts(), sample_info(), gene_metadata())
+      make_heatmap_plot(counts(), sample_info(), gene_metadata(), input$heatmap_colour_scale)
     })
 
     output$heatmap_plot <- renderPlot(plot())
   })
+}
+
+#' Create heatmap from count data
+#'
+#' @param counts matrix - count data
+#' @param sample_info data.frame - Sample info
+#' @param gene_metadata data.frame - Gene metadata
+#' @param fill_palette_name Name of a palette to use for fill colour
+#'
+#' @return [ggplot2::ggplot] object
+#'
+#' @examples
+#'
+#' set.seed(20962)
+#' counts <- matrix(runif(100), nrow = 10,
+#'   dimnames = list(genes = paste0("gene-", 1:10),
+#'   samples = paste0("sample-", 1:10)))
+#'
+#' make_heatmap_plot(counts, sample_info, gene_metadata, fill_palette_name)
+#'
+make_heatmap_plot <- function(counts, sample_info, gene_metadata, fill_palette_name) {
+  # show gene names if matrix is small enough
+  if (nrow(counts) <= 100) {
+    gene_names <- get_gene_labels(gene_metadata)
+  } else {
+    gene_names <- FALSE
+  }
+  # show sample names if matrix is small enough
+  if (ncol(counts) <= 48) {
+    sample_names <- get_sample_labels(sample_info, colnames(counts))
+  } else {
+    sample_names <- FALSE
+  }
+
+  plot <- biovisr::matrix_heatmap(
+    counts, fill_palette = fill_palette_name,
+    xaxis_labels = sample_names, yaxis_labels = gene_names)
+
+  return(plot)
 }
 
 #' Get labels for heatmap axis labels
@@ -164,9 +192,9 @@ get_sample_labels <- function(sample_info, sample_ids) {
   if ("sampleName" %in% names(sample_info)) {
     labels <- sample_info$sampleName
     names(labels) <- sample_info$sample
-    return(labels[ sample_ids ])
+    return(labels[ sample_ids ] |> unname())
   } else {
-    return(sample_info$sample)
+    return(sample_info$sample[ sample_info$sample %in% sample_ids ])
   }
 }
 
