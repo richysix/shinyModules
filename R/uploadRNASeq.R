@@ -167,113 +167,13 @@ uploadRNASeqServer <-
         # close any open alerts
         shinyjs::runjs(glue::glue('$("#{id}-countsInputAlert button").click()'))
         shinyjs::runjs(glue::glue('$("#{id}-sampleInputAlert button").click()'))
-        sample_subset <- tryCatch(
-          { rnaseqtools::check_samples_match_counts(counts, sample_info)
-            sample_info },
-          warning = function(w) {
-            if (any(grepl("missing_from.*_counts", class(w)))) {
-              # subset sample info to samples in counts
-              available_samples <- intersect(sample_info$sample, colnames(counts))
-              if (length(available_samples) == 0) {
-                # create an alert and return NULL
-                msg <- paste("<b>None</b> of the samples in the samples file match any of those in the counts file.",
-                             sep = "<br>")
-                # generate alert
-                output$sampleInputAlert <- renderUI(
-                  shinyWidgets::alert(
-                    tags$h4("Sample IDs missing from counts"),
-                    tags$b("None"),
-                    " of the samples in the samples file match any of those in the counts file.",
-                    status = "danger",
-                    dismissible = TRUE
-                  )
-                )
-                return(NULL)
-              }
-              samples <- sample_info[ sample_info$sample %in% available_samples, ]
-              # parse message
-              if ("missing_from_both_samples_and_counts" %in% class(w)) {
-                # remove second half of message
-                msg <- sub("\n.*$", "", w$message)
-              } else {
-                msg <- w$message
-              }
-              output$sampleInputAlert <- renderUI(
-                shinyWidgets::alert(
-                  tags$h4("Sample IDs missing from counts"),
-                  msg, tags$br(),
-                  "These samples have been removed from the sample information",
-                  tags$br(),
-                  "If you want these samples included, they must also be present in the counts file",
-                  status = "warning",
-                  dismissible = TRUE
-                )
-              )
-            } else {
-              samples <- sample_info
-            }
-            if (debug) {
-              message("All data: warning from check_samples_match_counts")
-              message(w$message)
-            }
-            return(samples)
-          }
-        )
+        # subset the samples to the counts
+        sample_subset <- subset_samples_to_counts(counts, sample_info, output, debug)
         if (debug) {
           message("All data: subset samples")
           print(sample_subset)
         }
-        rnaseq_data_subset <- tryCatch(
-          { rnaseqtools::check_samples_match_counts(counts, sample_info)
-            rnaseq_data },
-          warning = function(w) {
-            if (any(grepl("missing_from.*_samples", class(w)))) {
-              # subset rnaseq_data to samples
-              rnaseq_subset <- rnaseqtools::subset_to_samples(rnaseq_data, sample_info)
-              count_samples <- colnames(rnaseq_data) |>
-                (function(x){ sub(" count", "", x) })() |>
-                (function(x){ sub(" normalised", "", x) })()
-              matching_samples <- intersect(sample_info$sample, count_samples)
-              if (length(matching_samples) == 0) {
-                # create an alert and return NULL
-                output$countsInputAlert <- renderUI(
-                  shinyWidgets::alert(
-                    tags$h4("Sample IDs missing from samples file"),
-                    tags$b("None"),
-                    " of the samples in the counts file match any of those in the samples file.",
-                    status = "danger",
-                    dismissible = TRUE
-                  )
-                )
-                return(NULL)
-              }
-              # parse message
-              if ("missing_from_both_samples_and_counts" %in% class(w)) {
-                # remove first half of message
-                msg <- sub("^.*\n", "", w$message) |>
-                  (function(x){ sub(" Only samples in both were returned", "", x) })()
-              } else {
-                msg <- w$message
-              }
-              output$countsInputAlert <- renderUI(
-                shinyWidgets::alert(
-                  tags$h4("Sample IDs missing from samples file"),
-                  msg,
-                  tags$br(),
-                  "These samples have been removed from the count data",
-                  tags$br(),
-                  "If you want these samples included, they must be present in the samples file",
-                  status = "warning",
-                  dismissible = TRUE
-                )
-              )
-            } else {
-              rnaseq_subset <- rnaseq_data
-            }
-            if (debug) message(w$message)
-            return(rnaseq_subset)
-          }
-        )
+        rnaseq_data_subset <- subset_counts_to_samples(rnaseq_data, counts, sample_info, output, debug)
         if (debug) {
           message("All data: subset RNAseq data")
           print(rnaseq_data_subset)
@@ -284,11 +184,7 @@ uploadRNASeqServer <-
         )
       })
 
-      # unpack the all_data reactive list
-      rnaseq_data <- reactive({
-        req(all_data())
-        all_data()$rnaseq_data
-      })
+      # Create a reactive object for the sample info
       sample_info <- reactive({
         req(all_data())
         all_data()$sample_info
@@ -298,16 +194,17 @@ uploadRNASeqServer <-
       # by using DESeq2 to calculate them
       # This may need a progress bar at some point
       count_data <- reactive({
-        req(rnaseq_data(), sample_info())
+        # req(rnaseq_data(), sample_info())
+        req(all_data())
 
         if (input$tpm) {
-          tpm <- rnaseqtools::get_tpm(rnaseq_data())
+          tpm <- rnaseqtools::get_tpm(all_data()$rnaseq_data)
           return(tpm)
         } else {
-          norm_counts <- rnaseqtools::get_counts(rnaseq_data(), normalised = TRUE)
+          norm_counts <- rnaseqtools::get_counts(all_data()$rnaseq_data, normalised = TRUE)
           # if file does not have normalised counts, try to get raw counts and normalise
           if (is.null(norm_counts)) {
-            norm_data <- rnaseqtools::normalise_counts(rnaseq_data(), sample_info())
+            norm_data <- rnaseqtools::normalise_counts(all_data()$rnaseq_data, all_data()$sample_info)
             if (debug) {
               message("count_data reactive: normalise_counts")
               print(head(norm_data))
@@ -320,8 +217,8 @@ uploadRNASeqServer <-
 
       # extract gene metadata
       gene_metadata <- reactive({
-        req(rnaseq_data())
-        rnaseqtools::get_gene_metadata(rnaseq_data())
+        req(all_data())
+        rnaseqtools::get_gene_metadata(all_data()$rnaseq_data)
       })
       # return the sample info and count data
       list(
@@ -331,6 +228,149 @@ uploadRNASeqServer <-
       )
     })
   }
+
+#' Subset a samples data.frame to match the columns in the count data.frame
+#'
+#' @param counts data.frame containing count columns
+#' @param sample_info  data.frame containing sample metadata
+#' @param output Shiny output object
+#' @param debug logical debug setting
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+subset_samples_to_counts <- function(counts, sample_info, output, debug) {
+  sample_subset <- tryCatch(
+    {
+      # check_samples_match_counts returns TRUE if the samples and count columns match
+      rnaseqtools::check_samples_match_counts(counts, sample_info)
+      # if that happens the whole sample_info data.frame is assigned to sample_subset
+      sample_info },
+    # otherwise parse the warning message from check_samples_match_counts
+    # if the message contains the word "counts" then at least one sample in the sample_info data.frame
+    # is not in the counts data.frame, so remove it from the samples data.frame
+    warning = function(w) {
+      if (any(grepl("missing_from.*_counts", class(w)))) {
+        # subset sample info to samples in counts
+        available_samples <- intersect(sample_info$sample, colnames(counts))
+        if (length(available_samples) == 0) {
+          # create an alert and return NULL
+          msg <- paste("<b>None</b> of the samples in the samples file match any of those in the counts file.",
+                       sep = "<br>")
+          # generate alert
+          output$sampleInputAlert <- renderUI(
+            shinyWidgets::alert(
+              tags$h4("Sample IDs missing from counts"),
+              tags$b("None"),
+              " of the samples in the samples file match any of those in the counts file.",
+              status = "danger",
+              dismissible = TRUE
+            )
+          )
+          return(NULL)
+        }
+        samples <- sample_info[ sample_info$sample %in% available_samples, ]
+        # parse message
+        if ("missing_from_both_samples_and_counts" %in% class(w)) {
+          # remove second half of message
+          msg <- sub("\n.*$", "", w$message)
+        } else {
+          msg <- w$message
+        }
+        output$sampleInputAlert <- renderUI(
+          shinyWidgets::alert(
+            tags$h4("Sample IDs missing from counts"),
+            msg, tags$br(),
+            "These samples have been removed from the sample information",
+            tags$br(),
+            "If you want these samples included, they must also be present in the counts file",
+            status = "warning",
+            dismissible = TRUE
+          )
+        )
+      } else {
+        samples <- sample_info
+      }
+      if (debug) {
+        message("All data: warning from check_samples_match_counts")
+        message(w$message)
+      }
+      return(samples)
+    }
+  )
+
+  return(sample_subset)
+}
+
+#' Subset a counts data.frame to match the columns in the samples data.frame
+#'
+#' @param counts data.frame containing count columns
+#' @param sample_info  data.frame containing sample metadata
+#' @param output Shiny output object
+#' @param debug logical debug setting
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+subset_counts_to_samples <- function(rnaseq_data, counts, sample_info, output, debug) {
+  rnaseq_data_subset <- tryCatch(
+    { rnaseqtools::check_samples_match_counts(counts, sample_info)
+      rnaseq_data },
+    warning = function(w) {
+      if (any(grepl("missing_from.*_samples", class(w)))) {
+        # subset rnaseq_data to samples
+        rnaseq_subset <- rnaseqtools::subset_to_samples(rnaseq_data, sample_info)
+        count_samples <- colnames(rnaseq_data) |>
+          (function(x){ sub(" count", "", x) })() |>
+          (function(x){ sub(" normalised", "", x) })()
+        matching_samples <- intersect(sample_info$sample, count_samples)
+        if (length(matching_samples) == 0) {
+          # create an alert and return NULL
+          output$countsInputAlert <- renderUI(
+            shinyWidgets::alert(
+              tags$h4("Sample IDs missing from samples file"),
+              tags$b("None"),
+              " of the samples in the counts file match any of those in the samples file.",
+              status = "danger",
+              dismissible = TRUE
+            )
+          )
+          return(NULL)
+        }
+        # parse message
+        if ("missing_from_both_samples_and_counts" %in% class(w)) {
+          # remove first half of message
+          msg <- sub("^.*\n", "", w$message) |>
+            (function(x){ sub(" Only samples in both were returned", "", x) })()
+        } else {
+          msg <- w$message
+        }
+        output$countsInputAlert <- renderUI(
+          shinyWidgets::alert(
+            tags$h4("Sample IDs missing from samples file"),
+            msg,
+            tags$br(),
+            "These samples have been removed from the count data",
+            tags$br(),
+            "If you want these samples included, they must be present in the samples file",
+            status = "warning",
+            dismissible = TRUE
+          )
+        )
+      } else {
+        rnaseq_subset <- rnaseq_data
+      }
+      if (debug) message(w$message)
+      return(rnaseq_subset)
+    }
+  )
+
+  return(rnaseq_data_subset)
+}
 
 #' A test shiny app for the uploadRNASeq module
 #'
@@ -363,6 +403,7 @@ uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
       debug = debug
     )
     output$samples <- renderTable({
+      req(data_list$sample_info())
       samples <- data_list$sample_info()
       if (ncol(samples) > 5) {
         samples[1:5,1:5]
@@ -371,6 +412,7 @@ uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
       }
     })
     output$counts <- renderTable({
+      req(data_list$counts())
       counts <- data_list$counts()
       if (ncol(counts) > 10) {
         counts[1:5,1:10]
@@ -379,6 +421,7 @@ uploadRNASeqApp <- function(testing = FALSE, debug = FALSE) {
       }
     })
     output$metadata <- renderTable({
+      req(data_list$gene_metadata())
       gene_metadata <- data_list$gene_metadata()
       if (ncol(gene_metadata) > 5) {
         gene_metadata[1:5,1:5]
